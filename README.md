@@ -23,38 +23,7 @@ python pipeline_cli.py evaluate-image --root-dir . --image-id levle2_93
 
 ---
 
-## 2. Project Structure
-
-```text
-acne_severity_pipeline/
-├── pipeline_cli.py               # Unified CLI entry point for all modules (M1–M7 & single-image evaluator)
-├── m1_data_loader.py             # M1: ACNE04 manifest builder, VOC XML parser & Stratified 5×2 CV generator
-├── m2_baseline_rcnn.py           # M2: Faster R-CNN baseline (pretrained wenh06/acne_detection or 5×2 CV retraining)
-├── m3_common.py                  # Shared utilities for M3 image standardization, skin masking & visualization
-├── m3a_mediapipe_audit.py        # M3A: MediaPipe Selfie Segmentation + FaceMesh 468-landmark failure audit
-├── m3b_skin_retention.py         # M3B: 3-stage cascaded fallback + YCrCb/HSV chromatic skin retention
-├── m3c_face_parsing.py           # M3C: BiSeNet CelebAMask-HQ semantic face parsing + nose-tip protection
-├── m3_bisenet_pipeline.py        # M3 Production BiSeNet pipeline & M4 CIELAB L*/a*/b* + CLAHE handoff
-├── m4_feature_extraction.py      # M4: Masked CIELAB a* chromatic stats & 32-level rotation-invariant GLCM
-├── m5_random_forest.py           # M5: Balanced Random Forest with Nested CV GridSearch & per-fold checkpointing
-├── m6_model_evaluation.py        # M6: 10-fold evaluation (Macro F1, OvO AUC-ROC, 4×4 CM, Combined 5×2 CV F-Test)
-├── m7_shap_interpretability.py   # M7: SHAP TreeExplainer global (bar + beeswarm) & local (waterfall + force) plots
-├── evaluate_single_image.py      # Single-image visual pipeline runner & dual-model (RF vs. R-CNN) evaluator
-├── requirements.txt              # Python package dependencies
-├── .gitignore                    # Git ignore rules for datasets, checkpoints, weights, and generated outputs
-├── Classification/               # ACNE04 official trainval/test split text files (and JPEGImages/ when placed here)
-├── Detection/VOC2007/            # ACNE04 PASCAL VOC bounding-box annotations (Annotations/ & ImageSets/)
-└── M1_outputs/                   # Precomputed M1 dataset manifest & 10-fold Stratified 5×2 CV split table
-```
-
-### Dataset Placement
-Place the raw ACNE04 images and XML bounding-box annotations in the following paths (matching `M1_outputs/m1_dataset_manifest.csv`):
-- **Images**: `Classification/JPEGImages/*.jpg`
-- **Bounding Box XMLs**: `Detection/VOC2007/Annotations/*.xml`
-
----
-
-## 3. System Architecture Overview (M1–M7)
+## 2. System Architecture Overview (M1–M7)
 
 | Module | Script | Description | Key Output Files |
 | :--- | :--- | :--- | :--- |
@@ -69,14 +38,14 @@ Place the raw ACNE04 images and XML bounding-box annotations in the following pa
 
 ---
 
-## 4. CLI Usage Guide (`pipeline_cli.py`)
+## 3. CLI Usage Guide (`pipeline_cli.py`)
 
 View all available subcommands at any time:
 ```bash
 python pipeline_cli.py --help
 ```
 
-### 4.1 Run the Full Pipeline (`run-pipeline`)
+### 3.1 Run the Full Pipeline (`run-pipeline`)
 Executes M1 → M3 → M2 → M4 → M5 → M6 → M7 sequentially:
 ```bash
 python pipeline_cli.py run-pipeline \
@@ -92,14 +61,14 @@ Useful flags:
 
 ---
 
-### 4.2 Module 1: Data Loader & Stratified 5×2 CV Split (`m1`)
+### 3.2 Module 1: Data Loader & Stratified 5×2 CV Split (`m1`)
 ```bash
 python pipeline_cli.py m1 --root-dir .
 ```
 
 ---
 
-### 4.3 Module 2: Baseline Faster R-CNN Lesion Counting (`m2`)
+### 3.3 Module 2: Baseline Faster R-CNN Lesion Counting (`m2`)
 Based on [`wenh06/acne_detection`](https://github.com/wenh06/acne_detection):
 - **Pretrained Faster R-CNN ResNet-101** (MEGA weight link included in script; auto-downloads or accepts `--weights-path`):
   ```bash
@@ -125,7 +94,7 @@ Based on [`wenh06/acne_detection`](https://github.com/wenh06/acne_detection):
 
 ---
 
-### 4.4 Module 3: Facial Skin Segmentation & CIELAB/CLAHE Handoff (`m3a-audit`, `m3b`, `m3c`, `m3-bisenet`, `m4-handoff`)
+### 3.4 Module 3: Facial Skin Segmentation & CIELAB/CLAHE Handoff (`m3a-audit`, `m3b`, `m3c`, `m3-bisenet`, `m4-handoff`)
 ```bash
 # Option A: Run M3C BiSeNet Face Parsing (19-class CelebAMask-HQ + nose-tip protection)
 python pipeline_cli.py m3c --root-dir .
@@ -139,7 +108,7 @@ python pipeline_cli.py m3-bisenet --root-dir . --run-m4-handoff
 
 ---
 
-### 4.5 Module 4: Chromatic (`CIELAB a*`) & Masked GLCM Feature Extraction (`m4`)
+### 3.5 Module 4: Chromatic (`CIELAB a*`) & Masked GLCM Feature Extraction (`m4`)
 Extracts the 24-feature matrix (`4` masked `a*` chromatic statistics + `16` distance-specific masked 32-level GLCM features across $d \in \{1, 3, 5, 10\}$ + `4` multi-scale aggregated GLCM descriptors):
 ```bash
 python pipeline_cli.py m4 \
@@ -152,7 +121,7 @@ python pipeline_cli.py m4 \
 
 ---
 
-### 4.6 Module 5: Balanced Random Forest Training (`m5`)
+### 3.6 Module 5: Balanced Random Forest Training (`m5`)
 Trains the Random Forest classifier (`class_weight="balanced"`) across all 10 folds of the 5×2 CV split using Nested Stratified CV for hyperparameter tuning on the training split only:
 ```bash
 python pipeline_cli.py m5 \
@@ -163,7 +132,7 @@ python pipeline_cli.py m5 \
 
 ---
 
-### 4.7 Module 6: Automated Model Evaluation & Combined 5×2 CV F-Test (`m6`)
+### 3.7 Module 6: Automated Model Evaluation & Combined 5×2 CV F-Test (`m6`)
 Automatically evaluates both **M5 Random Forest** and **M2 Baseline Faster R-CNN** across all 10 folds and runs the **Alpaydın (1999) Combined 5×2 CV F-Test**:
 ```bash
 python pipeline_cli.py m6 \
@@ -177,7 +146,7 @@ Generates:
 
 ---
 
-### 4.8 Module 7: SHAP `TreeExplainer` Global & Local Interpretability (`m7`)
+### 3.8 Module 7: SHAP `TreeExplainer` Global & Local Interpretability (`m7`)
 Computes TreeSHAP values for the best-performing Random Forest model and produces both global and local explanations:
 ```bash
 python pipeline_cli.py m7 \
@@ -192,7 +161,7 @@ Generates:
 
 ---
 
-### 4.9 Single-Image End-to-End Pipeline & Dual-Model Evaluator (`evaluate-image`)
+### 3.9 Single-Image End-to-End Pipeline & Dual-Model Evaluator (`evaluate-image`)
 Run any individual image through preprocessing, `CIELAB` channel extraction, ROI skin masking, M4 feature extraction, **Random Forest** vs. **Baseline Faster R-CNN** grading, and local **SHAP Waterfall & Force** plots:
 
 ```bash

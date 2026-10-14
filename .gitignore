@@ -1,0 +1,76 @@
+# =============================================================================
+# Python & Jupyter Bytecode / Cache
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.ipynb_checkpoints/
+*.ipynb
+
+# =============================================================================
+# Virtual Environments
+# =============================================================================
+.venv/
+venv/
+env/
+ENV/
+conda-meta/
+
+# =============================================================================
+# Raw ACNE04 Dataset Images & Annotations (Keep split manifests tracked)
+# =============================================================================
+Classification/JPEGImages/
+Detection/VOC2007/Annotations/
+Detection/VOC2007/JPEGImages/
+
+# =============================================================================
+# Pipeline Generated Outputs & Checkpoints
+# =============================================================================
+M2_outputs/
+M3_outputs/
+M4_outputs/
+M5_outputs/
+M6_outputs/
+M7_outputs/
+Single_Image_Evaluation/
+
+# =============================================================================
+# Downloaded Pretrained Weights & Serialized Models
+# =============================================================================
+models/
+pretrained/
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.pb
+*.tflite
+*.task
+*.h5
+*.pkl
+*.joblib
+
+# =============================================================================
+# Archives & Large Binary Files
+# =============================================================================
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.rar
+*.7z
+
+# =============================================================================
+# Environment Variables, Secrets & IDE / OS Metadata
+# =============================================================================
+.env
+.env.*
+*.key
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
